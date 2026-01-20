@@ -236,16 +236,26 @@ function showDashboard() {
         dc.style.opacity = '1';
         document.body.classList.add('dashboard-view');
 
-        if (welcome) welcome.textContent = 'Welcome, ' + (user.username || '') + ' (' + (user.role || '') + ')';
+        // Set welcome text immediately
+        if (welcome) {
+            welcome.textContent = 'Welcome, ' + (user.username || 'User') + ' (' + (user.role || 'UNKNOWN') + ')';
+        } else {
+            console.error('Welcome element not found');
+        }
 
+        // Set menu immediately
         if (menu) {
+            var isAdmin = authService.isAdmin();
+            var isTeacher = authService.isTeacher();
             menu.innerHTML =
                 '<button type="button" onclick="showHome()">Home</button>' +
-                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showStudentManagement()">Student Management</button>' : '') +
-                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showCourseManagement()">Course Management</button>' : '') +
-                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showAttendanceManagement()">Attendance</button>' : '') +
-                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showGradeManagement()">Grades</button>' : '') +
-                (authService.isAdmin() ? '<button type="button" onclick="showFinancialManagement()">Financial</button>' : '');
+                (isAdmin || isTeacher ? '<button type="button" onclick="showStudentManagement()">Student Management</button>' : '') +
+                (isAdmin || isTeacher ? '<button type="button" onclick="showCourseManagement()">Course Management</button>' : '') +
+                (isAdmin || isTeacher ? '<button type="button" onclick="showAttendanceManagement()">Attendance</button>' : '') +
+                (isAdmin || isTeacher ? '<button type="button" onclick="showGradeManagement()">Grades</button>' : '') +
+                (isAdmin ? '<button type="button" onclick="showFinancialManagement()">Financial</button>' : '');
+        } else {
+            console.error('Menu element not found');
         }
 
         if (content) {
