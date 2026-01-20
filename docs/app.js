@@ -249,43 +249,69 @@ function showDashboard() {
         }
 
         if (content) {
-            showHome();
+            // Set content immediately, don't wait
+            content.innerHTML = '<div class="home-welcome"><h3>Loading...</h3></div>';
+            // Then call showHome
+            setTimeout(function() {
+                try {
+                    showHome();
+                } catch (e) {
+                    console.error('Error in showHome:', e);
+                    if (content) {
+                        content.innerHTML = '<div class="home-welcome"><h3>Welcome to Student Information Management System</h3><p>Error loading content. Please refresh.</p></div>';
+                    }
+                }
+            }, 10);
         } else {
             console.error('Content area not found!');
+            // Fallback: create content area if missing
+            if (dc) {
+                var fallback = document.createElement('div');
+                fallback.className = 'content-area';
+                fallback.id = 'contentArea';
+                fallback.innerHTML = '<div class="home-welcome"><h3>Welcome to Student Information Management System</h3><p>Dashboard loaded successfully.</p></div>';
+                dc.appendChild(fallback);
+            }
         }
     } catch (e) {
         console.error('Error in showDashboard:', e);
-        alert('Error loading dashboard. Please refresh the page.');
+        var dc = document.getElementById('dashboardContainer');
+        if (dc) {
+            dc.innerHTML = '<div class="dashboard-header"><h2>Error</h2></div><div class="content-area"><p>Error loading dashboard. Please refresh the page.</p></div>';
+            dc.style.display = 'block';
+        }
     }
 }
 
 function showHome() {
-    try {
-        var user = authService.getCurrentUser();
-        if (!user) {
-            console.error('No user in showHome');
-            return;
-        }
-        var el = document.getElementById('contentArea');
-        if (!el) {
-            console.error('Content area not found in showHome');
-            return;
-        }
-        var roleText = '';
-        if (user.role === 'ADMIN') roleText = '<p>You have full access to students, courses, attendance, grades, and financial records.</p>';
-        else if (user.role === 'TEACHER') roleText = '<p>You can view and manage students, courses, attendance, and grades.</p>';
-        else if (user.role === 'STUDENT') roleText = '<p>You have view-only access to your records.</p>';
-        
-        el.innerHTML = 
-            '<div class="home-welcome">' +
-            '<h3>Welcome to Student Information Management System</h3>' +
-            '<p>Use the menu above to navigate to different modules.</p>' +
-            '<p><strong>Your role:</strong> ' + (user.role || '') + '</p>' +
-            roleText +
-            '</div>';
-    } catch (e) {
-        console.error('Error in showHome:', e);
+    var el = document.getElementById('contentArea');
+    if (!el) {
+        console.error('Content area not found in showHome');
+        return;
     }
+    
+    var user = authService.getCurrentUser();
+    if (!user) {
+        el.innerHTML = '<div class="home-welcome"><h3>Welcome</h3><p>Please log in.</p></div>';
+        return;
+    }
+    
+    var roleText = '';
+    if (user.role === 'ADMIN') {
+        roleText = '<p>You have full access to students, courses, attendance, grades, and financial records.</p>';
+    } else if (user.role === 'TEACHER') {
+        roleText = '<p>You can view and manage students, courses, attendance, and grades.</p>';
+    } else if (user.role === 'STUDENT') {
+        roleText = '<p>You have view-only access to your records.</p>';
+    }
+    
+    el.innerHTML = 
+        '<div class="home-welcome">' +
+        '<h3>Welcome to Student Information Management System</h3>' +
+        '<p>Use the menu above to navigate to different modules.</p>' +
+        '<p><strong>Your role:</strong> ' + (user.role || 'Unknown') + '</p>' +
+        roleText +
+        '</div>';
 }
 
 function handleLogout() {
