@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "role": "ADMIN",
+      "email": "admin@school.edu"
+    },
+    {
+      "user_id": 2,
+      "username": "teacher",
+      "password": "teacher123",
+      "role": "TEACHER",
+      "email": "teacher@school.edu"
+    },
+    {
+      "user_id": 3,
+      "username": "student",
+      "password": "student123",
+      "role": "STUDENT",
+      "email": "student@school.edu"
+    }
+  ],
+  "students": [
+    {
+      "student_id": 1,
+      "student_code": "1",
+      "first_name": "Nitin",
+      "last_name": "Singh",
+      "date_of_birth": "2001-11-26",
+      "gender": "MALE",
+      "email": "19bcs2408@gmail.com",
+      "phone": "8146208330",
+      "address": "Chandigarh",
+      "enrollment_date": "2023-01-20",
+      "status": "ACTIVE",
+      "user_id": null
+    }
+  ],
+  "courses": [],
+  "enrollments": [],
+  "attendance": [],
+  "grades": [],
+  "financialRecords": []
+}
