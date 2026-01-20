@@ -16,7 +16,25 @@ body {
 
 body.dashboard-view {
     align-items: flex-start;
-    padding: 10px;
+    justify-content: flex-start;
+    padding: 0;
+}
+
+body.dashboard-view .login-container {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+body.dashboard-view .dashboard-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
 }
 
 .login-container {
@@ -119,7 +137,7 @@ input[type="password"]:focus {
 
 /* Dashboard Styles */
 .dashboard-container {
-    display: block !important;
+    display: block;
     width: 100%;
     padding: 20px;
     max-width: 1400px;

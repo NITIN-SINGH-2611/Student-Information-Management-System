@@ -192,11 +192,17 @@ function showDashboard() {
         if (lc) {
             lc.style.display = 'none';
             lc.style.visibility = 'hidden';
+            lc.style.position = 'absolute';
+            lc.style.left = '-9999px';
+            lc.style.width = '0';
+            lc.style.height = '0';
+            lc.style.overflow = 'hidden';
         }
         if (dc) {
             dc.style.display = 'block';
             dc.style.visibility = 'visible';
             dc.style.opacity = '1';
+            dc.style.width = '100%';
         }
         document.body.classList.add('dashboard-view');
         
