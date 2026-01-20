@@ -149,44 +149,69 @@ function showDashboard() {
         return;
     }
     
-    var lc = document.getElementById('loginContainer');
-    var dc = document.getElementById('dashboardContainer');
-    var welcome = document.getElementById('dashboardWelcome');
-    var menu = document.getElementById('menuBar');
-    var content = document.getElementById('contentArea');
-    
-    if (!dc) {
-        alert('Dashboard container not found!');
-        return;
-    }
-    
-    if (lc) lc.style.display = 'none';
-    dc.style.display = 'block';
-    dc.style.visibility = 'visible';
-    dc.style.opacity = '1';
-    document.body.classList.add('dashboard-view');
-    
-    if (welcome) {
-        welcome.textContent = 'Welcome, ' + user.username + ' (' + user.role + ')';
-    }
-    
-    if (menu) {
-        var menuHtml = '<button type="button" onclick="showHome()">Home</button>';
-        if (isAdmin() || isTeacher()) {
-            menuHtml += '<button type="button" onclick="showStudentManagement()">Student Management</button>';
-            menuHtml += '<button type="button" onclick="showCourseManagement()">Course Management</button>';
-            menuHtml += '<button type="button" onclick="showAttendanceManagement()">Attendance</button>';
-            menuHtml += '<button type="button" onclick="showGradeManagement()">Grades</button>';
+    // Wait a tiny bit to ensure DOM is ready
+    setTimeout(function() {
+        var lc = document.getElementById('loginContainer');
+        var dc = document.getElementById('dashboardContainer');
+        var welcome = document.getElementById('dashboardWelcome');
+        var menu = document.getElementById('menuBar');
+        var content = document.getElementById('contentArea');
+        
+        if (!dc) {
+            console.error('Dashboard container not found!');
+            // Try to create it if missing
+            var body = document.body;
+            if (body) {
+                var newDc = document.createElement('div');
+                newDc.className = 'dashboard-container';
+                newDc.id = 'dashboardContainer';
+                newDc.innerHTML = 
+                    '<div class="dashboard-header">' +
+                    '<h2 id="dashboardWelcome">Welcome</h2>' +
+                    '<button class="btn-logout" type="button" onclick="handleLogout()">Logout</button>' +
+                    '</div>' +
+                    '<div class="menu-bar" id="menuBar"></div>' +
+                    '<div class="content-area" id="contentArea"></div>';
+                body.appendChild(newDc);
+                dc = newDc;
+                welcome = document.getElementById('dashboardWelcome');
+                menu = document.getElementById('menuBar');
+                content = document.getElementById('contentArea');
+            } else {
+                return;
+            }
         }
-        if (isAdmin()) {
-            menuHtml += '<button type="button" onclick="showFinancialManagement()">Financial</button>';
+        
+        if (lc) lc.style.display = 'none';
+        if (dc) {
+            dc.style.display = 'block';
+            dc.style.visibility = 'visible';
+            dc.style.opacity = '1';
         }
-        menu.innerHTML = menuHtml;
-    }
-    
-    if (content) {
-        showHome();
-    }
+        document.body.classList.add('dashboard-view');
+        
+        if (welcome) {
+            welcome.textContent = 'Welcome, ' + user.username + ' (' + user.role + ')';
+        }
+        
+        if (menu) {
+            var menuHtml = '<button type="button" onclick="showHome()">Home</button>';
+            if (isAdmin() || isTeacher()) {
+                menuHtml += '<button type="button" onclick="showStudentManagement()">Student Management</button>';
+                menuHtml += '<button type="button" onclick="showCourseManagement()">Course Management</button>';
+                menuHtml += '<button type="button" onclick="showAttendanceManagement()">Attendance</button>';
+                menuHtml += '<button type="button" onclick="showGradeManagement()">Grades</button>';
+            }
+            if (isAdmin()) {
+                menuHtml += '<button type="button" onclick="showFinancialManagement()">Financial</button>';
+            }
+            menu.innerHTML = menuHtml;
+        }
+        
+        if (content) {
+            showHome();
+        }
+    }, 10);
 }
 
 function handleLogout() {
