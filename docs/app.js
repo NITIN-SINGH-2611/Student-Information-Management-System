@@ -8,8 +8,15 @@ class DataStorage {
 
     async loadDataFromFile() {
         try {
-            const response = await fetch('data.json');
-            if (response.ok) {
+            var paths = ['data.json', './data.json', '/Student-Information-Management-System/docs/data.json', '/docs/data.json'];
+            var response = null;
+            for (var i = 0; i < paths.length; i++) {
+                try {
+                    response = await fetch(paths[i]);
+                    if (response.ok) break;
+                } catch (e) {}
+            }
+            if (response && response.ok) {
                 const fileData = await response.json();
                 const localData = localStorage.getItem('sims_data');
                 if (localData) {
