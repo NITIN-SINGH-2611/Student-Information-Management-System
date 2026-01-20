@@ -27,6 +27,12 @@ body.dashboard-view {
     max-width: 450px;
 }
 
+.login-container[style*="display: none"],
+.login-container[style*="display:none"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
 .login-box {
     background: white;
     padding: 40px;

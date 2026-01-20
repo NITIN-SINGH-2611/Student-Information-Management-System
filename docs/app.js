@@ -137,8 +137,15 @@ function handleLogin(e) {
 function showLogin() {
     var lc = document.getElementById('loginContainer');
     var dc = document.getElementById('dashboardContainer');
-    if (lc) lc.style.display = 'flex';
-    if (dc) dc.style.display = 'none';
+    if (lc) {
+        lc.style.display = 'flex';
+        lc.style.visibility = 'visible';
+        lc.style.opacity = '1';
+    }
+    if (dc) {
+        dc.style.display = 'none';
+        dc.style.visibility = 'hidden';
+    }
     document.body.classList.remove('dashboard-view');
 }
 
@@ -182,7 +189,10 @@ function showDashboard() {
             }
         }
         
-        if (lc) lc.style.display = 'none';
+        if (lc) {
+            lc.style.display = 'none';
+            lc.style.visibility = 'hidden';
+        }
         if (dc) {
             dc.style.display = 'block';
             dc.style.visibility = 'visible';
