@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Data - SIMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .upload-area {
+            border: 2px dashed #667eea;
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sync Data from Desktop App</h1>
+    <p>Upload your <code>data.json</code> file from the desktop application to sync data to the web version.</p>
+    
+    <div class="upload-area">
+        <input type="file" id="fileInput" accept=".json">
+        <br>
+        <button onclick="syncData()">Sync Data</button>
+    </div>
+    
+    <div id="status"></div>
+    
+    <script>
+        function syncData() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const statusDiv = document.getElementById('status');
+            
+            if (!file) {
+                statusDiv.innerHTML = '<div class="status error">Please select a data.json file first.</div>';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    localStorage.setItem('sims_data', JSON.stringify(data));
+                    statusDiv.innerHTML = '<div class="status success">Data synced successfully! <a href="index.html">Go to Login</a></div>';
+                } catch (error) {
+                    statusDiv.innerHTML = '<div class="status error">Error parsing JSON file: ' + error.message + '</div>';
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
