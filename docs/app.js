@@ -1,6 +1,8 @@
 // Data Storage using localStorage (similar to data.json)
 class DataStorage {
     constructor() {
+        this._readyResolve = null;
+        this.ready = new Promise(function(r) { this._readyResolve = r; }.bind(this));
         this.loadDataFromFile();
     }
 
@@ -12,53 +14,37 @@ class DataStorage {
                 const localData = localStorage.getItem('sims_data');
                 if (localData) {
                     const local = JSON.parse(localData);
-                    // Merge file data if local is empty
-                    if (!local.students || local.students.length === 0) {
-                        local.students = fileData.students || [];
-                    }
-                    if (!local.courses || local.courses.length === 0) {
-                        local.courses = fileData.courses || [];
-                    }
-                    if (!local.enrollments || local.enrollments.length === 0) {
-                        local.enrollments = fileData.enrollments || [];
-                    }
-                    if (!local.attendance || local.attendance.length === 0) {
-                        local.attendance = fileData.attendance || [];
-                    }
-                    if (!local.grades || local.grades.length === 0) {
-                        local.grades = fileData.grades || [];
-                    }
-                    if (!local.financialRecords || local.financialRecords.length === 0) {
-                        local.financialRecords = fileData.financialRecords || [];
-                    }
+                    if (!local.students || local.students.length === 0) local.students = fileData.students || [];
+                    if (!local.courses || local.courses.length === 0) local.courses = fileData.courses || [];
+                    if (!local.enrollments || local.enrollments.length === 0) local.enrollments = fileData.enrollments || [];
+                    if (!local.attendance || local.attendance.length === 0) local.attendance = fileData.attendance || [];
+                    if (!local.grades || local.grades.length === 0) local.grades = fileData.grades || [];
+                    if (!local.financialRecords || local.financialRecords.length === 0) local.financialRecords = fileData.financialRecords || [];
                     localStorage.setItem('sims_data', JSON.stringify(local));
                 } else {
                     localStorage.setItem('sims_data', JSON.stringify(fileData));
                 }
+                if (this._readyResolve) this._readyResolve();
                 return;
             }
         } catch (error) {
             console.log('Could not load data.json, using default data');
         }
         this.initDefaultData();
+        if (this._readyResolve) this._readyResolve();
     }
 
     initDefaultData() {
         if (!localStorage.getItem('sims_data')) {
-            const defaultData = {
+            var d = {
                 users: [
                     { user_id: 1, username: "admin", password: "admin123", role: "ADMIN", email: "admin@school.edu" },
                     { user_id: 2, username: "teacher", password: "teacher123", role: "TEACHER", email: "teacher@school.edu" },
                     { user_id: 3, username: "student", password: "student123", role: "STUDENT", email: "student@school.edu" }
                 ],
-                students: [],
-                courses: [],
-                enrollments: [],
-                attendance: [],
-                grades: [],
-                financialRecords: []
+                students: [], courses: [], enrollments: [], attendance: [], grades: [], financialRecords: []
             };
-            localStorage.setItem('sims_data', JSON.stringify(defaultData));
+            localStorage.setItem('sims_data', JSON.stringify(d));
         }
     }
 
@@ -138,8 +124,8 @@ class DataStorage {
 
 // Authentication
 class AuthService {
-    constructor() {
-        this.storage = new DataStorage();
+    constructor(storage) {
+        this.storage = storage;
         this.currentUser = null;
     }
 
@@ -175,24 +161,24 @@ class AuthService {
 }
 
 // Application State
-const authService = new AuthService();
 const storage = new DataStorage();
+const authService = new AuthService(storage);
 let selectedStudentId = null;
 let selectedCourseId = null;
 
 // Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-        showDashboard();
-    } else {
-        showLogin();
+document.addEventListener('DOMContentLoaded', function() {
+    var loginForm = document.getElementById('loginForm');
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+
+    function go() {
+        var cu = authService.getCurrentUser();
+        if (cu) showDashboard(); else showLogin();
     }
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
+
+    Promise.race([ storage.ready, new Promise(function(r){ setTimeout(r, 2500); }) ])
+        .then(go)
+        .catch(function() { go(); });
 });
 
 function handleLogin(e) {
@@ -210,37 +196,89 @@ function handleLogin(e) {
 }
 
 function showLogin() {
-    document.querySelector('.login-container').style.display = 'flex';
-    document.querySelector('.dashboard-container')?.remove();
+    document.body.classList.remove('dashboard-view');
+    var lc = document.getElementById('loginContainer');
+    var dc = document.getElementById('dashboardContainer');
+    if (lc) lc.style.display = 'flex';
+    if (dc) dc.style.display = 'none';
 }
 
 function showDashboard() {
-    document.querySelector('.login-container').style.display = 'none';
-    const user = authService.getCurrentUser();
-    if (!user) return;
+    try {
+        var user = authService.getCurrentUser();
+        if (!user) {
+            console.error('No user found');
+            showLogin();
+            return;
+        }
 
-    const dashboard = document.createElement('div');
-    dashboard.className = 'dashboard-container';
-    dashboard.innerHTML = `
-        <div class="dashboard-header">
-            <h2>Welcome, ${user.username} (${user.role})</h2>
-            <button class="btn-logout" onclick="handleLogout()">Logout</button>
-        </div>
-        <div class="menu-bar">
-            ${authService.isAdmin() || authService.isTeacher() ? '<button onclick="showStudentManagement()">Student Management</button>' : ''}
-            ${authService.isAdmin() || authService.isTeacher() ? '<button onclick="showCourseManagement()">Course Management</button>' : ''}
-            ${authService.isAdmin() || authService.isTeacher() ? '<button onclick="showAttendanceManagement()">Attendance</button>' : ''}
-            ${authService.isAdmin() || authService.isTeacher() ? '<button onclick="showGradeManagement()">Grades</button>' : ''}
-            ${authService.isAdmin() ? '<button onclick="showFinancialManagement()">Financial</button>' : ''}
-        </div>
-        <div class="content-area" id="contentArea">
-            <h3>Welcome to Student Information Management System</h3>
-            <p>Use the menu above to navigate to different modules.</p>
-            <p>Your role: ${user.role}</p>
-        </div>
-    `;
-    document.body.appendChild(dashboard);
-    showStudentManagement();
+        var lc = document.getElementById('loginContainer');
+        var dc = document.getElementById('dashboardContainer');
+        var welcome = document.getElementById('dashboardWelcome');
+        var menu = document.getElementById('menuBar');
+        var content = document.getElementById('contentArea');
+
+        if (!dc) {
+            console.error('Dashboard container not found!');
+            return;
+        }
+
+        if (lc) lc.style.display = 'none';
+        dc.style.display = 'block';
+        dc.style.visibility = 'visible';
+        dc.style.opacity = '1';
+        document.body.classList.add('dashboard-view');
+
+        if (welcome) welcome.textContent = 'Welcome, ' + (user.username || '') + ' (' + (user.role || '') + ')';
+
+        if (menu) {
+            menu.innerHTML =
+                '<button type="button" onclick="showHome()">Home</button>' +
+                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showStudentManagement()">Student Management</button>' : '') +
+                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showCourseManagement()">Course Management</button>' : '') +
+                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showAttendanceManagement()">Attendance</button>' : '') +
+                (authService.isAdmin() || authService.isTeacher() ? '<button type="button" onclick="showGradeManagement()">Grades</button>' : '') +
+                (authService.isAdmin() ? '<button type="button" onclick="showFinancialManagement()">Financial</button>' : '');
+        }
+
+        if (content) {
+            showHome();
+        } else {
+            console.error('Content area not found!');
+        }
+    } catch (e) {
+        console.error('Error in showDashboard:', e);
+        alert('Error loading dashboard. Please refresh the page.');
+    }
+}
+
+function showHome() {
+    try {
+        var user = authService.getCurrentUser();
+        if (!user) {
+            console.error('No user in showHome');
+            return;
+        }
+        var el = document.getElementById('contentArea');
+        if (!el) {
+            console.error('Content area not found in showHome');
+            return;
+        }
+        var roleText = '';
+        if (user.role === 'ADMIN') roleText = '<p>You have full access to students, courses, attendance, grades, and financial records.</p>';
+        else if (user.role === 'TEACHER') roleText = '<p>You can view and manage students, courses, attendance, and grades.</p>';
+        else if (user.role === 'STUDENT') roleText = '<p>You have view-only access to your records.</p>';
+        
+        el.innerHTML = 
+            '<div class="home-welcome">' +
+            '<h3>Welcome to Student Information Management System</h3>' +
+            '<p>Use the menu above to navigate to different modules.</p>' +
+            '<p><strong>Your role:</strong> ' + (user.role || '') + '</p>' +
+            roleText +
+            '</div>';
+    } catch (e) {
+        console.error('Error in showHome:', e);
+    }
 }
 
 function handleLogout() {
@@ -553,9 +591,21 @@ function showCourseManagement() {
         <div class="action-buttons">
             ${isAdmin ? '<button class="btn btn-primary" onclick="editCourse()">Edit</button>' : ''}
             ${isAdmin ? '<button class="btn btn-success" onclick="showEnrollStudentModal()">Enroll Student</button>' : ''}
+            ${isAdmin ? '<button class="btn btn-danger" onclick="deleteCourse()">Delete</button>' : ''}
         </div>
     `;
     loadCourses();
+}
+
+function deleteCourse() {
+    if (!authService.isAdmin()) return;
+    if (!selectedCourseId) { alert('Please select a course to delete.'); return; }
+    if (!confirm('Delete this course? Enrollments will remain but the course will be removed.')) return;
+    const courses = storage.getCourses().filter(c => c.course_id !== selectedCourseId);
+    storage.setCourses(courses);
+    selectedCourseId = null;
+    loadCourses();
+    alert('Course deleted.');
 }
 
 function loadCourses() {
